@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bram — Staatsexamen Havo</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%233C3489'/><text y='.9em' font-size='72' x='50%' text-anchor='middle'>🎓</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%233C3489'/><text y='.9em' font-size='72' x='50%' text-anchor='middle'>🎓</text></svg>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bram Studie">
+<meta name="theme-color" content="#3C3489">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#2C2C2A;min-height:100vh}
+.topbar{background:#3C3489;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar h1{font-size:17px;font-weight:600;color:#fff}
+.topbar p{font-size:11px;color:#AFA9EC;margin-top:1px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#5DCAA5;flex-shrink:0}
+.sync-dot.off{background:#F09595}
+.container{max-width:720px;margin:0 auto;padding:1rem}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.stat{background:#fff;border-radius:10px;padding:12px 14px;border:0.5px solid #e0e0e0}
+.stat-label{font-size:11px;color:#888;margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:600;color:#2C2C2A}
+.stat-sub{font-size:10px;color:#aaa;margin-top:2px}
+.prog-wrap{background:#e8e8e8;border-radius:99px;height:5px;margin-top:6px;overflow:hidden}
+.prog-bar{height:100%;border-radius:99px;background:#534AB7;transition:width .4s}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin-bottom:1rem;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 14px;font-size:12px;font-weight:600;border:none;background:#fff;cursor:pointer;color:#888;border-radius:8px;white-space:nowrap;border:0.5px solid #e8e8e8;flex-shrink:0}
+.tab.active{background:#3C3489;color:#fff;border-color:#3C3489}
+.pane{display:none}
+.pane.active{display:block}
+.vak-tip{font-size:12px;color:#444;background:#EEEDFE;border-radius:10px;padding:12px 14px;margin-bottom:1rem;line-height:1.6}
+.vak-tip strong{color:#3C3489}
+.vak-prog{margin-bottom:1rem}
+.vak-prog-label{font-size:12px;color:#888;display:flex;justify-content:space-between;margin-bottom:4px}
+.vak-prog-bar{background:#e8e8e8;border-radius:99px;height:7px;overflow:hidden}
+.vak-prog-fill{height:100%;border-radius:99px;transition:width .4s}
+.section-label{font-size:10px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin:1rem 0 6px;padding:0 2px}
+.item{display:flex;align-items:flex-start;gap:10px;padding:12px;background:#fff;border:0.5px solid #e8e8e8;border-radius:10px;margin-bottom:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.item:active{background:#f5f5f5}
+.item.done{background:#f8f8f8}
+.chk{width:20px;height:20px;border:2px solid #ddd;border-radius:5px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.chk.done{background:#534AB7;border-color:#534AB7}
+.chk-mark{display:none;width:6px;height:10px;border:2.5px solid #fff;border-top:none;border-left:none;transform:rotate(45deg) translate(-1px,-1px)}
+.chk.done .chk-mark{display:block}
+.item-body{flex:1;min-width:0}
+.item-title{font-size:13px;font-weight:600;color:#2C2C2A;line-height:1.3}
+.item.done .item-title{color:#bbb;text-decoration:line-through}
+.item-sub{font-size:11px;color:#888;margin-top:3px;line-height:1.5}
+.tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;align-items:center}
+.tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px}
+.tag-nieuw{background:#FAECE7;color:#712B13}
+.tag-uitbr{background:#EEEDFE;color:#3C3489}
+.tag-basis{background:#EAF3DE;color:#3B6D11}
+.tag-actief{background:#534AB7;color:#fff}
+.bron-link{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#185FA5;text-decoration:none;margin-top:5px;padding:3px 9px;background:#E6F1FB;border-radius:99px;font-weight:500}
+.week-badge{font-size:10px;color:#ccc;padding-left:8px;white-space:nowrap;flex-shrink:0;align-self:center}
+.dashboard-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1rem}
+.vak-card{background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;padding:14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.vak-card:active{background:#f9f9f9}
+.vak-card-name{font-size:13px;font-weight:700;color:#2C2C2A;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.vak-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.vak-card-count{font-size:11px;color:#aaa;margin-bottom:8px}
+.streak-box{background:#EEEDFE;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.streak-text{font-size:13px;color:#3C3489;font-weight:600}
+.streak-sub{font-size:11px;color:#534AB7;margin-top:2px}
+.maand-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.maand-pill{padding:6px 12px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid #e0e0e0;cursor:pointer;color:#888;background:#fff}
+.maand-pill.active{background:#534AB7;color:#fff;border-color:#534AB7}
+.maand-pill.huidige{border-color:#534AB7;color:#3C3489}
+.set-month-btn{width:100%;padding:12px;background:#fff;border:1.5px solid #534AB7;color:#3C3489;font-size:13px;font-weight:600;border-radius:10px;cursor:pointer;margin-top:1rem}
+.status-bar{font-size:11px;color:#aaa;text-align:center;padding:6px;margin-bottom:8px}
+.actief-label{font-size:10px;font-weight:600;color:#534AB7;margin-left:6px;background:#EEEDFE;padding:1px 6px;border-radius:99px}
+.info-card{background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;padding:14px;margin-bottom:10px}
+.info-card-title{font-size:13px;font-weight:700;color:#2C2C2A;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.info-row{display:flex;gap:10px;padding:8px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start}
+.info-row:last-child{border-bottom:none;padding-bottom:0}
+.info-label{font-size:12px;font-weight:600;color:#2C2C2A;min-width:130px;flex-shrink:0}
+.info-val{font-size:12px;color:#555;line-height:1.5;flex:1}
+.fase-card{background:#fff;border-left:3px solid #534AB7;border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:8px;border-top:0.5px solid #e8e8e8;border-right:0.5px solid #e8e8e8;border-bottom:0.5px solid #e8e8e8}
+.fase-title{font-size:13px;font-weight:700;color:#3C3489;margin-bottom:4px}
+.fase-period{font-size:11px;color:#888;margin-bottom:6px}
+.fase-vak{font-size:12px;color:#444;margin-bottom:3px;padding-left:10px}
+.week-row{display:grid;grid-template-columns:80px 1fr;gap:8px;margin-bottom:6px;align-items:start}
+.week-num{font-size:11px;font-weight:600;color:#888;padding-top:2px}
+.week-items{font-size:12px;color:#444;line-height:1.6}
+.routine-day{background:#fff;border:0.5px solid #e8e8e8;border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.routine-day-name{font-size:13px;font-weight:700;color:#3C3489;margin-bottom:4px}
+.routine-detail{font-size:12px;color:#555;line-height:1.6}
+.tip-item{padding:10px 0;border-bottom:0.5px solid #f0f0f0}
+.tip-item:last-child{border-bottom:none}
+.tip-item-label{font-size:12px;font-weight:700;color:#2C2C2A;margin-bottom:2px}
+.tip-item-val{font-size:12px;color:#555;line-height:1.5}
+.bron-card{background:#fff;border:0.5px solid #e8e8e8;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.bron-card-body{flex:1}
+.bron-card-name{font-size:13px;font-weight:600;color:#2C2C2A;margin-bottom:2px}
+.bron-card-gebruik{font-size:11px;color:#888;margin-bottom:6px;line-height:1.5}
+.gratis-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#EAF3DE;color:#3B6D11}
+.betaald-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#FAEEDA;color:#633806}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>Bram — Staatsexamen Havo</h1>
+    <p id="topbar-sub">Verbinding maken...</p>
+  </div>
+  <div class="sync-dot off" id="sync-dot"></div>
+</div>
+
+<div class="container">
+  <div class="status-bar" id="status-bar">Verbinding maken...</div>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-label">Voortgang</div>
+      <div class="stat-val" id="stat-pct">0%</div>
+      <div class="prog-wrap"><div class="prog-bar" id="prog-totaal" style="width:0%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Afgerond</div>
+      <div class="stat-val" id="stat-done">0</div>
+      <div class="stat-sub" id="stat-done-sub">van 0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Huidige maand</div>
+      <div class="stat-val" id="stat-maand">1</div>
+      <div class="stat-sub">van 12</div>
+    </div>
+  </div>
+  <div class="streak-box">
+    <div style="font-size:22px;flex-shrink:0">&#127757;</div>
+    <div>
+      <div class="streak-text" id="streak-text">Begin vandaag!</div>
+      <div class="streak-sub" id="streak-sub">Vink je eerste onderwerp af om te starten</div>
+    </div>
+  </div>
+  <div class="tabs" id="main-tabs">
+    <button class="tab active" onclick="showPane('dashboard')">Dashboard</button>
+    <button class="tab" onclick="showPane('nl')">Nederlands</button>
+    <button class="tab" onclick="showPane('en')">Engels</button>
+    <button class="tab" onclick="showPane('du')">Duits</button>
+    <button class="tab" onclick="showPane('wi')">Wiskunde A</button>
+    <button class="tab" onclick="showPane('ec')">Economie</button>
+    <button class="tab" onclick="showPane('planning')">Planning</button>
+    <button class="tab" onclick="showPane('bronnen')">Bronnen</button>
+    <button class="tab" onclick="showPane('duo')">DUO & Tips</button>
+  </div>
+  <div id="pane-dashboard" class="pane active"></div>
+  <div id="pane-nl" class="pane"></div>
+  <div id="pane-en" class="pane"></div>
+  <div id="pane-du" class="pane"></div>
+  <div id="pane-wi" class="pane"></div>
+  <div id="pane-ec" class="pane"></div>
+  <div id="pane-planning" class="pane"></div>
+  <div id="pane-bronnen" class="pane"></div>
+  <div id="pane-duo" class="pane"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBeNpXxTMkg8QXGADMs7diSb2-oS1baqFg",
+  authDomain: "bram---studie---havo-diploma.firebaseapp.com",
+  projectId: "bram---studie---havo-diploma",
+  storageBucket: "bram---studie---havo-diploma.firebasestorage.app",
+  messagingSenderId: "98848052714",
+  appId: "1:98848052714:web:3ad5076874e65f61b5ce93"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const docRef = doc(db, "studie", "bram");
+
+const VAKKEN = [
+  {id:'nl',naam:'Nederlands',kleur:'#534AB7',dot:'#7F77DD',
+   tip:'Lees dagelijks een krant (NRC of Volkskrant). Bouw het literatuurdossier stap voor stap op. Oefen schrijfopdrachten altijd met tijdlimiet.',
+   items:[
+    {t:'Grammatica & zinsbouw',type:'basis',fase:'Fase 1',wv:1,wt:4,d:'Woordsoorten, zinsontleding, samengestelde zinnen',url:'https://www.scholieren.com/vak/nederlands',bron:'Scholieren.com — Nederlands'},
+    {t:'Taalbeschouwing',type:'uitbr',fase:'Fase 1',wv:3,wt:6,d:'Taalvariatie, stijllagen, registers',url:'https://www.scholieren.com/vak/nederlands',bron:'Scholieren.com — taalbeschouwing'},
+    {t:'Leesvaardigheid — informatief',type:'uitbr',fase:'Fase 1',wv:2,wt:8,d:'Hoofd- en bijzaken, tekststructuur, signaalwoorden',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — oude examens'},
+    {t:'Leesvaardigheid — argumentatief',type:'uitbr',fase:'Fase 2',wv:7,wt:14,d:'Redeneerstructuur, standpunt & argument, drogredenen',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — oude examens'},
+    {t:'Leesvaardigheid — beschouwend',type:'nieuw',fase:'Fase 2',wv:10,wt:16,d:'Toon, perspectief en implicaties herkennen',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — oude examens'},
+    {t:'Schrijfvaardigheid — samenvatting',type:'uitbr',fase:'Fase 2',wv:7,wt:12,d:'Objectief samenvatten op een derde van de lengte',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — schrijfopdrachten'},
+    {t:'Schrijfvaardigheid — betoog',type:'nieuw',fase:'Fase 2',wv:10,wt:16,d:'Structuur: these, argumenten, weerlegging, conclusie',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — schrijfopdrachten'},
+    {t:'Schrijfvaardigheid — beschouwing',type:'nieuw',fase:'Fase 2',wv:13,wt:18,d:'Genuanceerd standpunt, meerdere perspectieven',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — schrijfopdrachten'},
+    {t:'Argumentatieleer',type:'nieuw',fase:'Fase 2',wv:11,wt:16,d:'Drogredenen herkennen: ad hominem, stroman, cirkelredenering',url:'https://www.scholieren.com/vak/nederlands',bron:'Scholieren.com — argumentatieleer'},
+    {t:'Literatuur: 4 boeken + notities',type:'nieuw',fase:'Fase 1+2',wv:4,wt:22,d:'Thema, personages, vertelperspectief, tijdgeest',url:'https://www.bibliotheek.nl',bron:'Bibliotheek.nl — boeken gratis lenen'},
+    {t:'Literatuur: nog 4 boeken + dossier',type:'nieuw',fase:'Fase 3',wv:22,wt:34,d:'6 NL (1 voor 1880) + 2 wereldliteratuur — dossier afronden',url:'https://www.bibliotheek.nl',bron:'Bibliotheek.nl — boeken gratis lenen'},
+    {t:'Mondelinge vaardigheid',type:'nieuw',fase:'Fase 3',wv:28,wt:36,d:'Presentatie, debat, discussie — wekelijks oefenen',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — syllabus'},
+    {t:'Examentraining leesvaardigheid',type:'uitbr',fase:'Fase 3',wv:30,wt:40,d:'Oude CE-opgaven maken onder tijddruk',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — oude examens'},
+    {t:'Eindrepetitie & CE-training',type:'uitbr',fase:'Fase 4',wv:40,wt:48,d:'Volledige proefexamens, zwakke punten aanpakken',url:'https://www.examenblad.nl/vak/nederlands/2025/havo',bron:'Examenblad.nl — oude examens'},
+  ]},
+  {id:'en',naam:'Engels',kleur:'#0F6E56',dot:'#1D9E75',
+   tip:'Stel je telefoon in op Engels. Kijk series zonder NL-ondertitels. Schrijf dagelijks 10 minuten in het Engels.',
+   items:[
+    {t:'Grammatica herhalen — tijden',type:'basis',fase:'Fase 1',wv:1,wt:4,d:'Present/past simple+continuous, perfect tenses, future',url:'https://www.bbc.co.uk/learningenglish/english/course/upper-intermediate',bron:'BBC Learning English — B2 grammar'},
+    {t:'Grammatica uitbreiden',type:'uitbr',fase:'Fase 1',wv:3,wt:8,d:'Passive voice, conditionals 0-3, reported speech, relatives',url:'https://www.bbc.co.uk/learningenglish/english/course/upper-intermediate',bron:'BBC Learning English — B2 grammar'},
+    {t:'Woordenschat B1 naar B2',type:'uitbr',fase:'Fase 1',wv:1,wt:16,d:'Dagelijks 10 woorden via Quizlet; zakelijk en academisch',url:'https://quizlet.com/subject/b2-english-vocabulary/',bron:'Quizlet — B2 woordenschat sets'},
+    {t:'Leesvaardigheid B2 — informatief',type:'uitbr',fase:'Fase 2',wv:9,wt:18,d:'The Guardian/BBC articles — structuur en woordenschat',url:'https://www.theguardian.com',bron:'The Guardian — artikelen lezen'},
+    {t:'Leesvaardigheid B2 — argumentatief',type:'nieuw',fase:'Fase 2',wv:13,wt:22,d:'Editorials, opiniestukken — subtext en toon herkennen',url:'https://www.bbc.com/news',bron:'BBC News — opiniestukken'},
+    {t:'Luistervaardigheid B2',type:'nieuw',fase:'Fase 2',wv:9,wt:28,d:'BBC podcasts, TED Talks; aantekeningen maken tijdens luisteren',url:'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english',bron:'BBC — 6 Minute English podcast'},
+    {t:'Schrijfvaardigheid — essay & betoog',type:'nieuw',fase:'Fase 3',wv:20,wt:32,d:'For-and-against essay, opinion essay — vaste structuur gebruiken',url:'https://www.examenblad.nl/vak/engels/2025/havo',bron:'Examenblad.nl — schrijfopdrachten'},
+    {t:'Schrijfvaardigheid — formele brief',type:'nieuw',fase:'Fase 3',wv:24,wt:34,d:'Layout, register, formele aanspreekvormen',url:'https://www.bbc.co.uk/learningenglish',bron:'BBC Learning English — formal writing'},
+    {t:'Spreekvaardigheid B2',type:'uitbr',fase:'Fase 3',wv:22,wt:36,d:'Presentatie in Engels, discussie met tijdlimiet',url:'https://www.examenblad.nl/vak/engels/2025/havo',bron:'Examenblad.nl — syllabus mondeling'},
+    {t:'Examentraining CE',type:'uitbr',fase:'Fase 4',wv:38,wt:48,d:'Volledige oude examens maken onder tijddruk',url:'https://www.examenblad.nl/vak/engels/2025/havo',bron:'Examenblad.nl — oude examens'},
+  ]},
+  {id:'du',naam:'Duits',kleur:'#633806',dot:'#BA7517',
+   tip:'Leer naamvallen systematisch met ezelsbruggetjes. DW Deutsch Lernen is gratis en professioneel. Maak elke dag 15 minuten oefeningen.',
+   items:[
+    {t:'Werkwoorden — regelmatig',type:'basis',fase:'Fase 1',wv:1,wt:3,d:'Präsens, Perfekt, Imperfekt van regelmatige werkwoorden',url:'https://learngerman.dw.com/nl/overview',bron:'DW Deutsch Lernen — beginners'},
+    {t:'Werkwoorden — onregelmatig',type:'uitbr',fase:'Fase 1',wv:2,wt:6,d:'Sterke werkwoorden stamtijden memoriseren (top 80)',url:'https://learngerman.dw.com/nl/overview',bron:'DW Deutsch Lernen — werkwoorden'},
+    {t:'Naamvallen — systeem',type:'uitbr',fase:'Fase 1',wv:1,wt:6,d:'Nominatief, accusatief, datief — lidwoorden en voornaamwoorden',url:'https://learngerman.dw.com/nl/overview',bron:'DW Deutsch Lernen — naamvallen'},
+    {t:'Genitief & voorzetsels',type:'uitbr',fase:'Fase 1',wv:5,wt:10,d:'Voorzetsels met acc./dat./gen. — vaste combinaties leren',url:'https://learngerman.dw.com/nl/overview',bron:'DW Deutsch Lernen — intermediate'},
+    {t:'Woordenschat B1',type:'uitbr',fase:'Fase 1+2',wv:1,wt:20,d:'Dagelijks 8 woorden — thematisch via Anki (gratis app)',url:'https://ankiweb.net/shared/decks/deutsch',bron:'Anki — Duits B1 woordensets downloaden'},
+    {t:'Leesvaardigheid B1+',type:'nieuw',fase:'Fase 2',wv:10,wt:22,d:'Informatieve teksten; onbekende woorden uit context raden',url:'https://www.dw.com/de/deutsch-lernen/nachrichten/s-8030',bron:'DW — Nachrichten in eenvoudig Duits'},
+    {t:'Luistervaardigheid B1+',type:'nieuw',fase:'Fase 2',wv:12,wt:28,d:'DW Nachrichten, dialogen — globaal begrip trainen',url:'https://www.dw.com/de/deutsch-lernen/nachrichten/s-8030',bron:'DW — Langsam gesprochene Nachrichten'},
+    {t:'Bijzinnen & woordvolgorde',type:'nieuw',fase:'Fase 2',wv:14,wt:24,d:'Werkwoord naar achter in bijzin; weil, dass, obwohl etc.',url:'https://learngerman.dw.com/nl/overview',bron:'DW Deutsch Lernen — bijzinnen'},
+    {t:'Konjunktiv II & Passiv',type:'nieuw',fase:'Fase 3',wv:22,wt:32,d:'Höflichkeit, hypothesen; werden + Partizip II',url:'https://learngerman.dw.com/nl/overview',bron:'DW Deutsch Lernen — gevorderd'},
+    {t:'Schrijfvaardigheid — formele brief',type:'nieuw',fase:'Fase 3',wv:24,wt:36,d:'Briefopbouw, aanspreekvormen, vaste formuleringen',url:'https://www.examenblad.nl/vak/duits/2025/havo',bron:'Examenblad.nl — schrijfopdrachten Duits'},
+    {t:'Examentraining CE',type:'uitbr',fase:'Fase 4',wv:38,wt:48,d:'Lezen + luisteren + schrijven onder tijddruk',url:'https://www.examenblad.nl/vak/duits/2025/havo',bron:'Examenblad.nl — oude examens Duits'},
+  ]},
+  {id:'wi',naam:'Wiskunde A',kleur:'#0C447C',dot:'#378ADD',
+   tip:'Khan Academy voor uitleg per onderwerp — gratis en Nederlandstalig. Minimaal 30 min opgaven per dag. Wiskunde leer je ALLEEN door te doen.',
+   items:[
+    {t:'Basisrekenen & algebra',type:'basis',fase:'Fase 1',wv:1,wt:4,d:'Breuken, machten, wortels, haakjes uitwerken, vereenvoudigen',url:'https://nl.khanacademy.org/math/algebra',bron:'Khan Academy — algebra basis'},
+    {t:'Vergelijkingen & ongelijkheden',type:'basis',fase:'Fase 1',wv:2,wt:5,d:'Lineaire en kwadratische vergelijkingen oplossen',url:'https://nl.khanacademy.org/math/algebra',bron:'Khan Academy — vergelijkingen'},
+    {t:'Lineaire verbanden',type:'basis',fase:'Fase 1',wv:3,wt:7,d:'Rico, snijpunten, stelsels van vergelijkingen, grafiek tekenen',url:'https://nl.khanacademy.org/math/algebra',bron:'Khan Academy — lineaire functies'},
+    {t:'Kwadratische functies',type:'uitbr',fase:'Fase 1',wv:5,wt:10,d:'Parabool, discriminant, top berekenen, nulpunten',url:'https://nl.khanacademy.org/math/algebra2',bron:'Khan Academy — kwadratische functies'},
+    {t:'Exponentieel & logaritmisch',type:'uitbr',fase:'Fase 2',wv:9,wt:16,d:'Groeifactor, halveringstijd, logaritme-regels',url:'https://nl.khanacademy.org/math/algebra2',bron:'Khan Academy — exponentieel en log'},
+    {t:'Statistiek — centrummaten',type:'nieuw',fase:'Fase 2',wv:11,wt:18,d:'Gemiddelde, mediaan, modus, IQR, standaardafwijking',url:'https://nl.khanacademy.org/math/statistics-probability',bron:'Khan Academy — statistiek'},
+    {t:'Kansrekening',type:'nieuw',fase:'Fase 2',wv:14,wt:20,d:'Kansen berekenen, boomdiagram, normale verdeling',url:'https://nl.khanacademy.org/math/statistics-probability',bron:'Khan Academy — kansrekening'},
+    {t:'Financiële wiskunde',type:'nieuw',fase:'Fase 2',wv:16,wt:24,d:'Rente, annuïteiten, indexcijfers, groeifactor toepassen',url:'https://www.examenblad.nl/vak/wiskunde-a/2025/havo',bron:'Examenblad.nl — financiële wiskunde'},
+    {t:'Matrices',type:'nieuw',fase:'Fase 2',wv:18,wt:26,d:'Matrices optellen, vermenigvuldigen, toestandsmatrices',url:'https://nl.khanacademy.org/math/precalculus',bron:'Khan Academy — matrices'},
+    {t:'Differentiëren',type:'nieuw',fase:'Fase 3',wv:24,wt:34,d:'Afgeleide berekenen, extreme waarden, stijgen en dalen',url:'https://nl.khanacademy.org/math/calculus-1',bron:'Khan Academy — differentiëren'},
+    {t:'Meetkunde & coördinaten',type:'uitbr',fase:'Fase 3',wv:28,wt:36,d:'Afstand, middelpunt, cirkelvergelijking, sinusregel',url:'https://nl.khanacademy.org/math/geometry',bron:'Khan Academy — meetkunde'},
+    {t:'Examentraining CE',type:'uitbr',fase:'Fase 4',wv:38,wt:48,d:'Volledige proefexamens Wiskunde A onder tijddruk — rekenmachine gebruiken',url:'https://www.examenblad.nl/vak/wiskunde-a/2025/havo',bron:'Examenblad.nl — oude examens'},
+  ]},
+  {id:'ec',naam:'Economie',kleur:'#712B13',dot:'#D85A30',
+   tip:'Volg het nieuws (NOS, FD) voor actuele economie. Begrippen echt begrijpen is belangrijker dan ze uit het hoofd leren. Teken altijd vraag-aanboddiagrammen.',
+   items:[
+    {t:'Schaarste & economisch denken',type:'nieuw',fase:'Fase 1',wv:1,wt:3,d:'Opportuniteitskosten, marginaal denken, behoeften vs. middelen',url:'https://scholieren.com/vak/economie',bron:'Scholieren.com — economie begrippen'},
+    {t:'Vraag & aanbod',type:'nieuw',fase:'Fase 1',wv:2,wt:6,d:'Vraag- en aanbodcurve, evenwichtsprijs, verschuivingen tekenen',url:'https://scholieren.com/vak/economie',bron:'Scholieren.com — vraag en aanbod'},
+    {t:'Prijselasticiteit',type:'nieuw',fase:'Fase 1',wv:5,wt:9,d:'Ep berekenen, elastisch/inelastisch, kruiselasticiteit',url:'https://scholieren.com/vak/economie',bron:'Scholieren.com — elasticiteit'},
+    {t:'Marktvormen',type:'nieuw',fase:'Fase 1',wv:7,wt:12,d:'Volkomen concurrentie, monopolie, oligopolie, monopolistische concurrentie',url:'https://scholieren.com/vak/economie',bron:'Scholieren.com — marktvormen'},
+    {t:'Kosten & opbrengsten',type:'nieuw',fase:'Fase 2',wv:10,wt:16,d:'Totale kosten, totale winst, break-even, vaste en variabele kosten',url:'https://scholieren.com/vak/economie',bron:'Scholieren.com — kosten en opbrengsten'},
+    {t:'Nationale rekeningen & BBP',type:'nieuw',fase:'Fase 2',wv:12,wt:18,d:'Bestedingsmodel, economische kringloop, conjunctuur',url:'https://nos.nl/nieuws/economie',bron:'NOS Nieuws — actuele macro-economie'},
+    {t:'Geld, banken & inflatie',type:'nieuw',fase:'Fase 2',wv:15,wt:20,d:'Functies van geld, inflatie berekenen, koopkracht, ECB-beleid',url:'https://nos.nl/nieuws/economie',bron:'NOS Nieuws — inflatie en ECB'},
+    {t:'Arbeidsmarkt & werkloosheid',type:'nieuw',fase:'Fase 2',wv:17,wt:22,d:'Soorten werkloosheid, arbeidsaanbod en -vraag, minimumloon',url:'https://nos.nl/nieuws/economie',bron:'NOS Nieuws — arbeidsmarkt'},
+    {t:'Overheid & begrotingsbeleid',type:'nieuw',fase:'Fase 3',wv:22,wt:30,d:'Belastingen, overheidsuitgaven, begrotingssaldo, multiplier',url:'https://nos.nl/nieuws/economie',bron:'NOS Nieuws — overheidsbeleid'},
+    {t:'Internationale economie',type:'nieuw',fase:'Fase 3',wv:26,wt:34,d:'Comparatief voordeel, handelsbalans, wisselkoersen, EU en euro',url:'https://nos.nl/nieuws/economie',bron:'NOS Nieuws — internationale economie'},
+    {t:'Grafieken & indexcijfers',type:'uitbr',fase:'Fase 3',wv:20,wt:36,d:'Conjunctuurgrafieken, prijsindex berekenen, reëel vs. nominaal',url:'https://www.examenblad.nl/vak/economie/2025/havo',bron:'Examenblad.nl — grafieken oefenen'},
+    {t:'Actuele economie & examenformat',type:'uitbr',fase:'Fase 3',wv:28,wt:38,d:'Nieuws koppelen aan begrippen — typisch CE-examenformat',url:'https://www.examenblad.nl/vak/economie/2025/havo',bron:'Examenblad.nl — oude examens'},
+    {t:'Examentraining CE',type:'uitbr',fase:'Fase 4',wv:38,wt:48,d:'Redeneren, berekenen en grafiek tekenen onder tijddruk',url:'https://www.examenblad.nl/vak/economie/2025/havo',bron:'Examenblad.nl — oude examens'},
+  ]},
+];
+
+const FASES = [
+  {naam:'Fase 1 — Fundament leggen', periode:'Maand 1–3 (week 1–12)', kleur:'#185FA5',
+   omschrijving:'Basisstof herhalen en versterken. Hiaten opsporen. Literatuurlijst starten.',
+   per_vak:[
+    {vak:'Nederlands', items:['Grammatica & zinsbouw','Taalbeschouwing','Leesvaardigheid — informatief','Literatuur: 4 boeken + notities (start)']},
+    {vak:'Engels', items:['Grammatica herhalen — tijden','Grammatica uitbreiden','Woordenschat B1 naar B2 (start)']},
+    {vak:'Duits', items:['Werkwoorden — regelmatig','Werkwoorden — onregelmatig','Naamvallen — systeem','Genitief & voorzetsels','Woordenschat B1 (start)']},
+    {vak:'Wiskunde A', items:['Basisrekenen & algebra','Vergelijkingen & ongelijkheden','Lineaire verbanden','Kwadratische functies']},
+    {vak:'Economie', items:['Schaarste & economisch denken','Vraag & aanbod','Prijselasticiteit','Marktvormen']},
+  ]},
+  {naam:'Fase 2 — Nieuwe stof opbouwen', periode:'Maand 4–7 (week 13–28)', kleur:'#3B6D11',
+   omschrijving:'Alle nieuwe havo-stof systematisch doorwerken. Grootste studieblok.',
+   per_vak:[
+    {vak:'Nederlands', items:['Leesvaardigheid — argumentatief','Leesvaardigheid — beschouwend','Schrijfvaardigheid — samenvatting','Schrijfvaardigheid — betoog','Schrijfvaardigheid — beschouwing','Argumentatieleer']},
+    {vak:'Engels', items:['Leesvaardigheid B2 — informatief','Leesvaardigheid B2 — argumentatief','Luistervaardigheid B2']},
+    {vak:'Duits', items:['Leesvaardigheid B1+','Luistervaardigheid B1+','Bijzinnen & woordvolgorde']},
+    {vak:'Wiskunde A', items:['Exponentieel & logaritmisch','Statistiek — centrummaten','Kansrekening','Financiële wiskunde','Matrices']},
+    {vak:'Economie', items:['Kosten & opbrengsten','Nationale rekeningen & BBP','Geld, banken & inflatie','Arbeidsmarkt & werkloosheid']},
+  ]},
+  {naam:'Fase 3 — Verdiepen & oefenen', periode:'Maand 8–10 (week 29–40)', kleur:'#633806',
+   omschrijving:'Resterende stof afronden. Literatuurdossier afmaken. Eerste oefenexamens.',
+   per_vak:[
+    {vak:'Nederlands', items:['Literatuur: nog 4 boeken + dossier','Mondelinge vaardigheid','Examentraining leesvaardigheid']},
+    {vak:'Engels', items:['Schrijfvaardigheid — essay & betoog','Schrijfvaardigheid — formele brief','Spreekvaardigheid B2']},
+    {vak:'Duits', items:['Konjunktiv II & Passiv','Schrijfvaardigheid — formele brief']},
+    {vak:'Wiskunde A', items:['Differentiëren','Meetkunde & coördinaten']},
+    {vak:'Economie', items:['Overheid & begrotingsbeleid','Internationale economie','Grafieken & indexcijfers','Actuele economie & examenformat']},
+  ]},
+  {naam:'Fase 4 — Examenvoorbereiding', periode:'Maand 11–12 (week 41–48)', kleur:'#712B13',
+   omschrijving:'Geen nieuwe stof. Alleen herhalen, proefexamens en zwakke punten aanpakken.',
+   per_vak:[
+    {vak:'Nederlands', items:['Eindrepetitie & CE-training']},
+    {vak:'Engels', items:['Examentraining CE']},
+    {vak:'Duits', items:['Examentraining CE']},
+    {vak:'Wiskunde A', items:['Examentraining CE']},
+    {vak:'Economie', items:['Examentraining CE']},
+  ]},
+];
+
+const BRONNEN_OVERZICHT = [
+  {naam:'Examenblad.nl', gratis:true, gebruik:'Officiële syllabi + ALLE oude staatsexamens met antwoorden. Verplicht voor elk vak.', url:'https://www.examenblad.nl'},
+  {naam:'Khan Academy', gratis:true, gebruik:'Wiskunde A — video-uitleg per onderwerp + oefeningen met directe feedback. Deels Nederlandstalig.', url:'https://nl.khanacademy.org/math'},
+  {naam:'BBC Learning English', gratis:true, gebruik:'Engels B2 — grammatica, woordenschat, luisteren en schrijven op B2-niveau.', url:'https://www.bbc.co.uk/learningenglish'},
+  {naam:'DW Deutsch Lernen', gratis:true, gebruik:'Duits — complete gratis cursus van Deutsche Welle. Kies niveau A2/B1. Ook luisternachrichten.', url:'https://learngerman.dw.com/nl/overview'},
+  {naam:'Quizlet', gratis:true, gebruik:'Engels & Duits woordenschat — maak eigen sets of gebruik bestaande B1/B2 sets.', url:'https://quizlet.com'},
+  {naam:'Anki', gratis:true, gebruik:'Woordenschat Duits en economiebegrippen — spaced repetition, meest effectieve methode.', url:'https://ankiweb.net'},
+  {naam:'Scholieren.com', gratis:true, gebruik:'Economie begrippen + Nederlands samenvatting. Goed naslagwerk per onderwerp.', url:'https://scholieren.com'},
+  {naam:'NOS Nieuws — Economie', gratis:true, gebruik:'Actuele economie koppelen aan begrippen — dagelijks 10 min lezen is genoeg.', url:'https://nos.nl/nieuws/economie'},
+  {naam:'Bibliotheek.nl', gratis:true, gebruik:'Literatuurboeken gratis lenen voor het literatuurdossier Nederlands.', url:'https://www.bibliotheek.nl'},
+  {naam:'Getal & Ruimte havo 5 deel A', gratis:false, gebruik:'Wiskunde A methode — sluit exact aan op staatsexamen syllabus. Ca. €15 tweedehands via Marktplaats.', url:'https://www.marktplaats.nl/q/getal+ruimte+havo+5/'},
+  {naam:'Nieuw Nederlands havo 5', gratis:false, gebruik:'Nederlands methode voor leesvaardigheid en schrijfvaardigheid. Ca. €15 tweedehands.', url:'https://www.marktplaats.nl/q/nieuw+nederlands+havo+5/'},
+  {naam:'Klipp und Klar (Klett)', gratis:false, gebruik:'Beste Duits grammaticaboek voor zelfstudie. Duidelijke uitleg naamvallen en bijzinnen. Ca. €15.', url:'https://www.marktplaats.nl/q/klipp+und+klar/'},
+  {naam:'Praktische Economie havo 5', gratis:false, gebruik:'Standaard economie methode havo. Theorie en opgaven per hoofdstuk. Ca. €15 tweedehands.', url:'https://www.marktplaats.nl/q/praktische+economie+havo+5/'},
+  {naam:'English File Upper-Intermediate', gratis:false, gebruik:'Engels B2 methode (Oxford). Compleet zelfstudietraject grammatica + woordenschat. Ca. €15.', url:'https://www.marktplaats.nl/q/english+file+upper+intermediate/'},
+];
+
+const ROUTINE = [
+  {dag:'Maandag', kleur:'#0C447C', items:['Wiskunde A — 45 min opgaven maken','Wiskunde A — 15 min theorie nieuw onderwerp']},
+  {dag:'Dinsdag', kleur:'#0F6E56', items:['Engels — 30 min leesvaardigheid (artikel lezen)','Engels — 20 min woordenschat via Quizlet','Engels — 10 min schrijven in het Engels']},
+  {dag:'Woensdag', kleur:'#633806', items:['Duits — 30 min grammatica oefenen','Duits — 20 min woordenschat via Anki','Duits — 10 min luisteren (DW Nachrichten)']},
+  {dag:'Donderdag', kleur:'#712B13', items:['Economie — 45 min theorie en begrippen','Economie — 15 min actueel nieuws (NOS)']},
+  {dag:'Vrijdag', kleur:'#534AB7', items:['Nederlands — 30 min leesvaardigheid oefenen','Nederlands — 30 min schrijven of literatuur']},
+  {dag:'Zaterdag', kleur:'#444441', items:['Herhalingsdag — zwakste vak extra aandacht','Wekelijks oefenexamen (vanaf maand 9)']},
+  {dag:'Zondag', kleur:'#888780', items:['Rust of lichte herhaling','Geen nieuwe stof leren']},
+];
+
+const DUO_INFO = [
+  {label:'Website', val:'duo.nl/particulier/staatsexamen — hier schrijf je in'},
+  {label:'Aanmelddeadline', val:'Begin januari voor het examen in mei/juni — schrijf je op tijd in!'},
+  {label:'Examendatum', val:'Mei/juni — centraal examen (CE) per vak'},
+  {label:'Vakken spreiden', val:'Je mag vakken spreiden over meerdere examenjaren. Niet alles hoeft in één keer.'},
+  {label:'Kosten', val:'Per vak betaal je examengeld. Controleer actuele tarieven op duo.nl.'},
+  {label:'Schoolexamen (SE)', val:'Voor o.a. mondelinge vaardigheid Nederlands is er een SE via de staatsexamencommissie.'},
+  {label:'Deelcijfers bewaren', val:'Voldoende deelcijfers blijven 3 jaar geldig — handig als je spreidt.'},
+  {label:'Rekenmachine', val:'Wiskunde A — grafische rekenmachine toegestaan. Oefen er dagelijks mee!'},
+];
+
+const EXAMENTIPS = [
+  {label:'2 weken voor examen', val:'Geen nieuwe stof meer leren. Alleen herhalen en oefenexamens maken.'},
+  {label:'Slaap & ritme', val:'Zorg voor 8 uur slaap. Slaaptekort kost meer punten dan een extra studiedag.'},
+  {label:'Leesvaardigheid — techniek', val:'Lees eerst de vragen, dan de tekst. Scheelt veel tijd.'},
+  {label:'Tijdmanagement', val:'Bereken bij aanvang hoeveel tijd je per vraag hebt. Blijf niet hangen.'},
+  {label:'Onbekende woorden', val:'Raad betekenis uit de context. Ga niet hangen bij één onbekend woord.'},
+  {label:'Wiskunde', val:'Schrijf tussenstappen altijd op — ook als je twijfelt. Geeft deelpunten.'},
+  {label:'Economie', val:'Teken altijd een diagram bij een vraag over vraag/aanbod of marktvormen.'},
+  {label:'Na het examen', val:'Check je resultaten op duo.nl. Bij een onvoldoende kan je herkansen in augustus.'},
+];
+
+let checked = {}, currentMonth = 1, activePlanMonth = 1, saving = false;
+
+function isChecked(id,i){return !!(checked[id]&&checked[id][i]);}
+
+async function toggle(id,i){
+  if(!checked[id])checked[id]={};
+  checked[id][i]=!checked[id][i];
+  renderAll();
+  if(saving)return;
+  saving=true; setStatus('Opslaan...');
+  try{
+    await setDoc(docRef,{checked,currentMonth,updatedAt:new Date().toISOString()});
+    setStatus('Gesynchroniseerd ✓');
+    document.getElementById('sync-dot').className='sync-dot';
+  }catch(e){setStatus('Fout bij opslaan');document.getElementById('sync-dot').className='sync-dot off';}
+  saving=false;
+}
+
+async function saveMonth(m){
+  currentMonth=m;activePlanMonth=m;
+  try{await setDoc(docRef,{checked,currentMonth,updatedAt:new Date().toISOString()});setStatus('Gesynchroniseerd ✓');}catch(e){setStatus('Fout bij opslaan');}
+  renderAll();
+}
+
+function setStatus(msg){
+  document.getElementById('status-bar').textContent=msg;
+  document.getElementById('topbar-sub').textContent=msg;
+}
+
+onSnapshot(docRef,snap=>{
+  if(snap.exists()){
+    const d=snap.data();
+    checked=d.checked||{};currentMonth=d.currentMonth||1;activePlanMonth=currentMonth;
+    document.getElementById('sync-dot').className='sync-dot';
+    const ts=d.updatedAt?new Date(d.updatedAt).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}):'';
+    setStatus('Live gesynchroniseerd'+(ts?' · '+ts:''));
+  }else{setStatus('Nieuw — nog geen data');}
+  renderAll();
+},()=>{setStatus('Geen verbinding');document.getElementById('sync-dot').className='sync-dot off';});
+
+function totalStats(){
+  let total=0,done=0;
+  VAKKEN.forEach(v=>v.items.forEach((_,i)=>{total++;if(isChecked(v.id,i))done++;}));
+  return{total,done,pct:total?Math.round(done/total*100):0};
+}
+function vakStats(v){
+  let done=0;v.items.forEach((_,i)=>{if(isChecked(v.id,i))done++;});
+  return{total:v.items.length,done,pct:v.items.length?Math.round(done/v.items.length*100):0};
+}
+function inMonth(item,m){const f=(m-1)*4+1,t=m*4;return!(item.wt<f||item.wv>t);}
+function tagEl(type){const l={nieuw:'nieuw',uitbr:'uitbreiden',basis:'herhalen'};return `<span class="tag tag-${type}">${l[type]}</span>`;}
+function bronLink(url,label){return `<a href="${url}" target="_blank" class="bron-link">${label} &#8599;</a>`;}
+
+function renderAll(){
+  const s=totalStats();
+  document.getElementById('stat-pct').textContent=s.pct+'%';
+  document.getElementById('prog-totaal').style.width=s.pct+'%';
+  document.getElementById('stat-done').textContent=s.done;
+  document.getElementById('stat-done-sub').textContent='van '+s.total;
+  document.getElementById('stat-maand').textContent=currentMonth;
+  const st=document.getElementById('streak-text'),ss=document.getElementById('streak-sub');
+  if(s.done===0){st.textContent='Begin vandaag!';ss.textContent='Vink je eerste onderwerp af';}
+  else if(s.done<5){st.textContent='Goed bezig — '+s.done+' afgerond!';ss.textContent='Elke dag een beetje is de sleutel';}
+  else if(s.done<20){st.textContent=s.done+' onderwerpen klaar!';ss.textContent='Je bouwt momentum op';}
+  else{st.textContent=s.done+' van '+s.total+' afgerond!';ss.textContent=s.pct+'% van de weg naar het diploma';}
+  renderDashboard();
+  VAKKEN.forEach(v=>renderVak(v));
+  renderPlanning();
+  renderBronnen();
+  renderDuo();
+}
+
+function renderDashboard(){
+  let html='';
+  html+='<div class="dashboard-grid">'+VAKKEN.map(v=>{
+    const vs=vakStats(v);
+    return `<div class="vak-card" onclick="showPane('${v.id}')">
+      <div class="vak-card-name"><span class="vak-dot" style="background:${v.dot}"></span>${v.naam}</div>
+      <div class="vak-card-count">${vs.done}/${vs.total} afgerond &nbsp; ${vs.pct}%</div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${vs.pct}%;background:${v.dot}"></div></div>
+    </div>`;
+  }).join('')+'</div>';
+
+  const actief=[];
+  VAKKEN.forEach(v=>v.items.forEach((item,i)=>{if(inMonth(item,currentMonth)&&!isChecked(v.id,i))actief.push({v,item,i});}));
+  html+=`<div class="section-label">Nu actief — maand ${currentMonth}</div>`;
+  if(!actief.length){html+=`<div style="font-size:13px;color:#aaa;padding:16px;text-align:center">Alle onderwerpen van maand ${currentMonth} zijn afgerond!</div>`;}
+  else{html+=actief.slice(0,6).map(({v,item,i})=>`<div class="item" onclick="doToggle('${v.id}',${i})">
+    <div class="chk"><div class="chk-mark"></div></div>
+    <div class="item-body">
+      <div class="item-title">${item.t} <span style="font-size:11px;color:${v.dot};font-weight:400">— ${v.naam}</span></div>
+      <div class="item-sub">${item.d}</div>
+      <div class="tags">${tagEl(item.type)}<span class="tag tag-actief">actief</span></div>
+      ${bronLink(item.url,item.bron)}
+    </div></div>`).join('');}
+  document.getElementById('pane-dashboard').innerHTML=html;
+}
+
+function renderVak(v){
+  const vs=vakStats(v);
+  const secs={};
+  v.items.forEach((item,i)=>{if(!secs[item.fase])secs[item.fase]=[];secs[item.fase].push({item,i});});
+  let html=`<div class="vak-tip"><strong>Studietip:</strong> ${v.tip}</div>
+  <div class="vak-prog">
+    <div class="vak-prog-label"><span>${vs.done} van ${vs.total} afgerond</span><span style="font-weight:700;color:${v.kleur}">${vs.pct}%</span></div>
+    <div class="vak-prog-bar"><div class="vak-prog-fill" style="width:${vs.pct}%;background:${v.dot}"></div></div>
+  </div>`;
+  Object.entries(secs).forEach(([fase,entries])=>{
+    html+=`<div class="section-label">${fase}</div>`;
+    entries.forEach(({item,i})=>{
+      const done=isChecked(v.id,i),aktief=inMonth(item,currentMonth);
+      html+=`<div class="item${done?' done':''}" onclick="doToggle('${v.id}',${i})">
+        <div class="chk${done?' done':''}"><div class="chk-mark"></div></div>
+        <div class="item-body">
+          <div class="item-title">${item.t}${aktief&&!done?'<span class="actief-label">nu actief</span>':''}</div>
+          <div class="item-sub">${item.d}</div>
+          <div class="tags">${tagEl(item.type)}</div>
+          ${bronLink(item.url,item.bron)}
+        </div>
+        <div class="week-badge">wk ${item.wv}–${item.wt}</div>
+      </div>`;
+    });
+  });
+  document.getElementById('pane-'+v.id).innerHTML=html;
+}
+
+function renderPlanning(){
+  let html='<div class="section-label">Selecteer maand</div>';
+  html+='<div class="maand-row">'+Array.from({length:12},(_,i)=>i+1).map(m=>
+    `<span class="maand-pill${m===activePlanMonth?' active':''}${m===currentMonth&&m!==activePlanMonth?' huidige':''}" onclick="setPlanMonth(${m})">Mnd ${m}</span>`
+  ).join('')+'</div>';
+
+  const f=(activePlanMonth-1)*4+1,t=activePlanMonth*4;
+  html+=`<div class="section-label">Week ${f}–${t} — maand ${activePlanMonth}</div>`;
+  let found=false;
+  VAKKEN.forEach(v=>{
+    const actief=v.items.map((item,i)=>({item,i})).filter(({item})=>inMonth(item,activePlanMonth));
+    if(!actief.length)return; found=true;
+    html+=`<div style="font-size:12px;font-weight:700;color:${v.kleur};margin:12px 0 4px">${v.naam}</div>`;
+    actief.forEach(({item,i})=>{
+      const done=isChecked(v.id,i);
+      html+=`<div class="item${done?' done':''}" onclick="doToggle('${v.id}',${i})">
+        <div class="chk${done?' done':''}"><div class="chk-mark"></div></div>
+        <div class="item-body">
+          <div class="item-title">${item.t}</div>
+          <div class="item-sub">${item.d}</div>
+          <div class="tags">${tagEl(item.type)}</div>
+          ${bronLink(item.url,item.bron)}
+        </div>
+        <div class="week-badge">wk ${item.wv}–${item.wt}</div>
+      </div>`;
+    });
+  });
+  if(!found)html+=`<div style="font-size:13px;color:#aaa;padding:16px;text-align:center">Geen actieve onderwerpen in maand ${activePlanMonth}.</div>`;
+
+  html+='<div class="section-label" style="margin-top:1.5rem">Studiefases</div>';
+  FASES.forEach(fase=>{
+    html+=`<div class="fase-card" style="border-left-color:${fase.kleur}">
+      <div class="fase-title" style="color:${fase.kleur}">${fase.naam}</div>
+      <div class="fase-period">${fase.periode}</div>
+      <div style="font-size:12px;color:#555;margin-bottom:8px">${fase.omschrijving}</div>
+      ${fase.per_vak.map(pv=>`<div class="fase-vak"><strong>${pv.vak}:</strong> ${pv.items.join(' · ')}</div>`).join('')}
+    </div>`;
+  });
+
+  html+=`<button class="set-month-btn" onclick="doSetMonth(${activePlanMonth})">Maand ${activePlanMonth} instellen als huidige maand</button>`;
+  document.getElementById('pane-planning').innerHTML=html;
+}
+
+function renderBronnen(){
+  let html='<div class="section-label">Alle studiebronnen</div>';
+  const gratis=BRONNEN_OVERZICHT.filter(b=>b.gratis);
+  const betaald=BRONNEN_OVERZICHT.filter(b=>!b.gratis);
+  html+='<div class="section-label">Gratis</div>';
+  gratis.forEach(b=>{
+    html+=`<div class="bron-card">
+      <div class="bron-card-body">
+        <div class="bron-card-name">${b.naam} <span class="gratis-badge">Gratis</span></div>
+        <div class="bron-card-gebruik">${b.gebruik}</div>
+        <a href="${b.url}" target="_blank" class="bron-link">Naar website &#8599;</a>
+      </div>
+    </div>`;
+  });
+  html+='<div class="section-label">Tweedehands boeken (~€10-20)</div>';
+  betaald.forEach(b=>{
+    html+=`<div class="bron-card">
+      <div class="bron-card-body">
+        <div class="bron-card-name">${b.naam} <span class="betaald-badge">Betaald</span></div>
+        <div class="bron-card-gebruik">${b.gebruik}</div>
+        <a href="${b.url}" target="_blank" class="bron-link">Zoek op Marktplaats &#8599;</a>
+      </div>
+    </div>`;
+  });
+  document.getElementById('pane-bronnen').innerHTML=html;
+}
+
+function renderDuo(){
+  let html='';
+  html+='<div class="info-card">';
+  html+='<div class="info-card-title">DUO — Staatsexamen regelen</div>';
+  DUO_INFO.forEach(r=>{
+    html+=`<div class="info-row"><div class="info-label">${r.label}</div><div class="info-val">${r.val}</div></div>`;
+  });
+  html+=`<div style="margin-top:12px"><a href="https://duo.nl/particulier/staatsexamen" target="_blank" class="bron-link">Naar duo.nl &#8599;</a></div>`;
+  html+='</div>';
+
+  html+='<div class="info-card">';
+  html+='<div class="info-card-title">Dagelijkse studieroutine</div>';
+  ROUTINE.forEach(r=>{
+    html+=`<div class="routine-day">
+      <div class="routine-day-name" style="color:${r.kleur}">${r.dag}</div>
+      <div class="routine-detail">${r.items.join('<br>')}</div>
+    </div>`;
+  });
+  html+='</div>';
+
+  html+='<div class="info-card">';
+  html+='<div class="info-card-title">Examentips</div>';
+  EXAMENTIPS.forEach(t=>{
+    html+=`<div class="tip-item"><div class="tip-item-label">${t.label}</div><div class="tip-item-val">${t.val}</div></div>`;
+  });
+  html+='</div>';
+
+  document.getElementById('pane-duo').innerHTML=html;
+}
+
+window.doToggle=toggle;
+window.setPlanMonth=(m)=>{activePlanMonth=m;renderPlanning();};
+window.doSetMonth=saveMonth;
+window.showPane=(id)=>{
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  const map={dashboard:0,nl:1,en:2,du:3,wi:4,ec:5,planning:6,bronnen:7,duo:8};
+  if(map[id]!==undefined)document.getElementById('main-tabs').children[map[id]].classList.add('active');
+};
+</script>
+</body>
+</html>
